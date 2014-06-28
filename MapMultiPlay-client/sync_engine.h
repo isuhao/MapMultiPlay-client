@@ -65,6 +65,8 @@ namespace mmp
 
 			void leave(const room& room);
 
+			void find_room_by_name(const std::string& name, std::vector<room>& rooms);
+
 			const room* current_room();
 			friend class sync_engine;
 		};
