@@ -3,8 +3,9 @@
 #include "user.h"
 #include "geo.hpp"
 #include <vector>
-#include <chrono>
-
+#include "socket_io_client.hpp"
+#include <boost/shared_ptr.hpp>
+#include <functional>
 namespace mmp
 {
 	enum sync_event_type
@@ -27,6 +28,9 @@ namespace mmp
 
 	class sync_engine
 	{
+		typedef void* result_ptr;
+		typedef std::function<void (bool,result_ptr)> callback_func;
+
 	public:
 		class user_manager
 		{
@@ -38,11 +42,11 @@ namespace mmp
 			user_manager(sync_engine* engine);
 			~user_manager();
 		public:
-			void signup(const user_signup_def& signup_def);
+			void signup(const user_signup_def& signup_def,callback_func& callback);
 
-			void signin(const user_signin_def& signin_def);
+			void signin(const user_signin_def& signin_def,callback_func& callback);
 
-			void trial(const user_trial_def& trial_def);
+			void trial(const user_trial_def& trial_def,callback_func& callback);
 
 			const user* me();
 
@@ -60,19 +64,19 @@ namespace mmp
 			~room_manager();
 		public:
 
-			void create_room(const room_def& room_def);
+			void create_room(const room_def& room_def,callback_func& callback);
 
-			void join(const room& room);
+			void join(const room& room,callback_func& callback);
 
-			void leave(const room& room);
+			void leave(const room& room,callback_func& callback);
 
-			void find_room_by_name(const std::string& name, std::vector<room>& rooms);
+			void find_room_by_name(const std::string& name,callback_func& callback);
 
 			const room* current_room();
 			friend class sync_engine;
 		};
 
-		sync_engine(std::string host);
+		sync_engine(void);
 		~sync_engine(void);
 
 		room_manager* room_manager();
@@ -85,13 +89,18 @@ namespace mmp
 
 		void set_listener(isync_listener* listener);
 
+		void connect(std::string uri);
+
+		void disconnect();
+
 	private:
 		isync_listener *m_listener;
 		class room_manager m_roommgr;
 		class user_manager m_usermgr;
 		time_t m_interval;
-		std::string m_host;
-
+		unsigned int m_global_msg_id;
+		socketio::socketio_client_handler_ptr m_client_handler_ptr;
+		boost::shared_ptr<client> m_client_ptr;
 		void __fire_event(sync_event const& event);
 	};
 
