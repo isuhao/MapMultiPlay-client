@@ -1,0 +1,3 @@
+[submodule ".\\MapMultiPlay-client/socketio-clientpp"]
+	path = .\\MapMultiPlay-client/socketio-clientpp
+	url = https://github.com/ebshimizu/socket.io-clientpp.git
