@@ -28,13 +28,12 @@ namespace mmp
 	class sync_engine
 	{
 	public:
-		sync_engine(std::string host);
-		~sync_engine(void);
-
 		class user_manager
 		{
 			user* m_me;
 			sync_engine* engine;
+			user_manager(user_manager const&) = delete;
+			void operator=(user_manager const&) = delete;
 		protected:
 			user_manager(sync_engine* engine);
 			~user_manager();
@@ -54,6 +53,8 @@ namespace mmp
 		{
 			room *m_room;
 			sync_engine* engine;
+			room_manager(room_manager const&) = delete;
+			void operator=(room_manager const&) = delete;
 		protected:
 			room_manager(sync_engine* engine);
 			~room_manager();
@@ -70,6 +71,9 @@ namespace mmp
 			const room* current_room();
 			friend class sync_engine;
 		};
+
+		sync_engine(std::string host);
+		~sync_engine(void);
 
 		room_manager* room_manager();
 

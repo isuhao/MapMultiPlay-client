@@ -20,6 +20,8 @@ namespace mmp
 		string m_password;
 		gender m_gender;
 		//TODO: more info.
+		user_signup_def();
+		~user_signup_def();
 	};
 
 	class user_trial_def
@@ -27,9 +29,9 @@ namespace mmp
 
 	public:
 		string m_name;
-		string m_password;
 		gender m_gender;
-		//TODO: more info.
+		user_trial_def();
+		~user_trial_def();
 	};
 
 	class user_signin_def
@@ -37,6 +39,8 @@ namespace mmp
 	public:
 		string m_name;
 		string m_password;
+		user_signin_def();
+		~user_signin_def();
 	};
 
 	class user
