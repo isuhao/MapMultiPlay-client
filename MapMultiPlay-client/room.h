@@ -35,8 +35,8 @@ namespace mmp
 
 		unsigned int max_count() const;
 
-		const user& owner() const;
+		const user* owner() const;
 
-		void set_participants_and_owner(vector<user> const& users,unsigned int owner_idx);
+		void set_participants_and_owner(vector<user> const& participants,unsigned int owner_idx);
 	};
 }

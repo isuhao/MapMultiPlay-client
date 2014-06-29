@@ -8,6 +8,7 @@ namespace mmp
 	using namespace std;
 	enum gender
 	{
+		gender_unknown = 0,
 		gender_male = 1,
 		gender_female = 2
 	};
@@ -29,7 +30,6 @@ namespace mmp
 
 	public:
 		string m_name;
-		gender m_gender;
 		user_trial_def();
 		~user_trial_def();
 	};
@@ -51,7 +51,7 @@ namespace mmp
 		location m_loc;
 
 	public:
-		user(id_type id,string const& name);
+		user(id_type id,string const& name,gender gender);
 		~user(void);
 
 		const location & location() const;
