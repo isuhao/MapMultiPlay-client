@@ -3,9 +3,11 @@
 #include "user.h"
 #include "geo.hpp"
 #include <vector>
-#include "socket_io_client.hpp"
+#include "socket_io_client.h"
 #include <boost/shared_ptr.hpp>
 #include <functional>
+#include <map>
+
 namespace mmp
 {
 	enum sync_event_type
@@ -36,8 +38,8 @@ namespace mmp
 		{
 			user* m_me;
 			sync_engine* m_engine;
-			user_manager(user_manager const&) = delete;
-			void operator=(user_manager const&) = delete;
+			user_manager(user_manager const&) {};
+			void operator=(user_manager const&) {};
 		protected:
 			user_manager(sync_engine* engine);
 			~user_manager();
@@ -57,8 +59,8 @@ namespace mmp
 		{
 			room *m_room;
 			sync_engine* m_engine;
-			room_manager(room_manager const&) = delete;
-			void operator=(room_manager const&) = delete;
+			room_manager(room_manager const&) {};
+			void operator=(room_manager const&) {};
 		protected:
 			room_manager(sync_engine* engine);
 			~room_manager();
@@ -83,6 +85,14 @@ namespace mmp
 
 		user_manager* user_manager();
 
+		void create_room(const room_def& room_def,callback_func& callback);
+		
+			void join(const room& room,callback_func& callback);
+
+			void leave(const room& room,callback_func& callback);
+
+			void find_room_by_name(const std::string& name,callback_func& callback);
+
 		void publish_location(const location& loc);
 
 		void set_min_publish_interval(time_t interval);
@@ -99,8 +109,8 @@ namespace mmp
 		class user_manager m_usermgr;
 		time_t m_interval;
 		unsigned int m_global_msg_id;
+		std::map<unsigned int, callback_func> m_callback_mapping; // mapping global id with callbacks.
 		socketio::socketio_client_handler_ptr m_client_handler_ptr;
-		boost::shared_ptr<client> m_client_ptr;
 		void __fire_event(sync_event const& event);
 	};
 
