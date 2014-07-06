@@ -85,13 +85,7 @@ namespace mmp
 
 		user_manager* user_manager();
 
-		void create_room(const room_def& room_def,callback_func& callback);
 		
-			void join(const room& room,callback_func& callback);
-
-			void leave(const room& room,callback_func& callback);
-
-			void find_room_by_name(const std::string& name,callback_func& callback);
 
 		void publish_location(const location& loc);
 
@@ -102,15 +96,17 @@ namespace mmp
 		void connect(std::string uri);
 
 		void disconnect();
-
+	protected:
+		socketio::socketio_client_handler_ptr m_client_handler_ptr;
+		unsigned int m_global_msg_id;
+		std::map<unsigned int, callback_func> m_callback_mapping; // mapping global id with callbacks.
 	private:
 		isync_listener *m_listener;
 		class room_manager m_roommgr;
 		class user_manager m_usermgr;
 		time_t m_interval;
-		unsigned int m_global_msg_id;
-		std::map<unsigned int, callback_func> m_callback_mapping; // mapping global id with callbacks.
-		socketio::socketio_client_handler_ptr m_client_handler_ptr;
+		
+		
 		void __fire_event(sync_event const& event);
 	};
 

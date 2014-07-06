@@ -21,6 +21,10 @@ namespace mmp
 		{
 		}
 
+		static inline void convert_room(Document &json, const room& room)
+		{
+		}
+
 		static inline void convert_user_signup_def(Document &json, const user_signup_def& def)
 		{
 		}
