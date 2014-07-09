@@ -4,6 +4,8 @@ namespace mmp
 {
 		const char* const proto_constants::ENDPOINT_SERVER = "$server";
 
+		const char* const proto_constants::EVENT_PUBLISH_LOCATION = "loc";
+
 		const char* const proto_constants::EVENT_USER_SIGNIN = "user_signin";
 
 		const char* const proto_constants::EVENT_USER_SIGNUP = "user_signup";

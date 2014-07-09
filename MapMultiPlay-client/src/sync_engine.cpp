@@ -125,7 +125,7 @@ namespace mmp
 		//TODO:call socket.io interfaces.
 		rapidjson::Document doc;
 		json_convertor::convert_location(doc,loc);
-		m_client_handler_ptr->emit("loc",doc,"$room",m_global_msg_id++);
+		m_client_handler_ptr->emit(proto_constants::EVENT_PUBLISH_LOCATION,doc,proto_constants::ENDPOINT_SERVER,m_global_msg_id++);
 	}
 
 	void sync_engine::set_min_publish_interval(time_t interval)
