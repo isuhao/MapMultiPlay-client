@@ -28,9 +28,9 @@ namespace mmp
 		virtual ~isync_listener(){};
 	};
 
-	class sync_engine
+	class sync_engine:public socketio_client_handler::connection_listener,public socketio_client_handler::socketio_listener
 	{
-		typedef void* result_ptr;
+		typedef const void* result_ptr;
 		typedef std::function<void (bool,result_ptr)> callback_func;
 
 	public:
@@ -85,8 +85,6 @@ namespace mmp
 
 		user_manager* user_manager();
 
-		
-
 		void publish_location(const location& loc);
 
 		void set_min_publish_interval(time_t interval);
@@ -98,15 +96,24 @@ namespace mmp
 		void disconnect();
 	protected:
 		socketio::socketio_client_handler_ptr m_client_handler_ptr;
-		unsigned int m_global_msg_id;
-		std::map<unsigned int, callback_func> m_callback_mapping; // mapping global id with callbacks.
+		std::map<std::string, callback_func> m_callback_mapping; 
+
+		//con event callbacks
+		void on_fail(connection_hdl con);
+		void on_open(connection_hdl con) ;
+		void on_close(connection_hdl con);
+
+		//io listener callbacks
+		void on_socketio_event(const std::string& msgEndpoint,const std::string& name, const Value& args,std::string* ackResponse);
+		void on_socketio_error(const std::string& endppoint,const std::string& reason,const std::string& advice);
+
 	private:
 		isync_listener *m_listener;
 		class room_manager m_roommgr;
 		class user_manager m_usermgr;
 		time_t m_interval;
-		
-		
+
+
 		void __fire_event(sync_event const& event);
 	};
 

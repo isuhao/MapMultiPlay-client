@@ -35,5 +35,15 @@ namespace mmp
 		static inline void convert_user_trial_def(Document &json, const user_trial_def& def)
 		{
 		}
+
+		static inline room to_room(Value const&json)
+		{
+
+		}
+
+		static inline void to_locations(std::map<id_type, location>& locs, Value const& json)
+		{
+
+		}
 	}
 }

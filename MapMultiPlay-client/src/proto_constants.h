@@ -6,6 +6,8 @@ namespace mmp
 	public:
 		static const char* const EVENT_PUBLISH_LOCATION;
 
+		static const char* const EVENT_SYNC_LOCATION;
+
 		static const char* const ENDPOINT_SERVER;
 
 		static const char* const EVENT_USER_SIGNIN;
