@@ -8,7 +8,7 @@ namespace mmp{
 	room_def::~room_def()
 	{
 	}
-
+    
 	room::room(id_type id, unsigned int max_count,string const& name)
 		:m_id(id),m_max_count(max_count),m_name(name),m_owner_index(0)
 	{}

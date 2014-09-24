@@ -1,5 +1,7 @@
 #pragma once
+
 #include "room.h"
+
 #include "user.h"
 #include "geo.hpp"
 #include <vector>
@@ -7,6 +9,7 @@
 #include <boost/shared_ptr.hpp>
 #include <functional>
 #include <map>
+
 
 namespace mmp
 {
@@ -28,6 +31,7 @@ namespace mmp
 		virtual ~isync_listener(){};
 	};
 
+    using namespace socketio;
 	class sync_engine:public socketio_client_handler::connection_listener,public socketio_client_handler::socketio_listener
 	{
 		typedef const void* result_ptr;
@@ -68,9 +72,9 @@ namespace mmp
 
 			void create_room(const room_def& room_def,callback_func& callback);
 
-			void join(const room& room,callback_func& callback);
+            void join(id_type room_id,callback_func& callback);
 
-			void leave(const room& room,callback_func& callback);
+            void leave(id_type room_id,callback_func& callback);
 
 			void find_room_by_name(const std::string& name,callback_func& callback);
 

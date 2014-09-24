@@ -25,4 +25,4 @@
 #define MM_ASSERTN(a,s,...)
 #endif
 
-typedef long id_type;
+typedef int id_type;

@@ -15,6 +15,16 @@ namespace mmp
 		room_def();
 		~room_def();
 	};
+    
+    class room_info
+    {
+    public:
+        id_type m_id;
+        unsigned int m_max_count;
+        string m_name;
+        string m_owner_name;
+        unsigned int m_joined_count;
+    };
 
 	class room
 	{
