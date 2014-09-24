@@ -15,7 +15,12 @@ namespace mmp{
 
 	room::~room(void)
 	{}
-
+    
+    vector<user> & room::participants()
+    {
+        return m_participants;
+    }
+    
 	const vector<user> & room::participants() const
 	{
 		return m_participants;

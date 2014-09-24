@@ -40,7 +40,7 @@ namespace mmp
 	public:
 		class user_manager
 		{
-			user* m_me;
+			unique_ptr<user> m_me;
 			sync_engine* m_engine;
 			user_manager(user_manager const&) {};
 			void operator=(user_manager const&) {};
@@ -61,11 +61,12 @@ namespace mmp
 
 		class room_manager
 		{
-			room *m_room;
+
 			sync_engine* m_engine;
 			room_manager(room_manager const&) {};
 			void operator=(room_manager const&) {};
 		protected:
+            unique_ptr<room> m_room;
 			room_manager(sync_engine* engine);
 			~room_manager();
 		public:

@@ -23,5 +23,7 @@ namespace mmp
 		static const char* const EVENT_ROOM_LEAVE;
 
 		static const char* const EVENT_ROOM_FIND_BY_NAME;
+        
+        static const char* const EVENT_ROOM_PARTICIPANTS_CHANGE;
 	};
 }

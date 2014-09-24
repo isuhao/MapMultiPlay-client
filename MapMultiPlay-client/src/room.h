@@ -36,7 +36,9 @@ namespace mmp
 	public:
 		room(id_type id, unsigned int max_count,string const& name);
 		~room(void);
-
+        
+        vector<user> & participants();
+        
 		const vector<user> & participants() const;
 
 		id_type id() const;
