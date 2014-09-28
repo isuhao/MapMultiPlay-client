@@ -11,6 +11,7 @@ namespace mmp
 {
     void wrap_json_document(Document& doc,std::function<void (Value& json,Document& doc)> callback)
     {
+        doc.SetObject();
         Value json(kObjectType);
         callback(json,doc);
         doc.AddMember("args",json,doc.GetAllocator());
@@ -136,7 +137,8 @@ namespace mmp
     
     sync_engine::sync_engine():m_roommgr(this),m_usermgr(this),m_interval(2),m_listener(NULL),m_client_handler_ptr(new socketio::socketio_client_handler())
     {
-        
+        m_client_handler_ptr->set_socketio_listener(this);
+        m_client_handler_ptr->set_connection_listener(this);
     }
     
     sync_engine::~sync_engine(void)
@@ -162,12 +164,15 @@ namespace mmp
     //io listener callbacks
     void sync_engine::on_socketio_event(const std::string& msgEndpoint,const std::string& name, const Value& args,std::string* ackResponse)
     {
+        
+        void* callbackData = NULL;
+        std::function<void (void*)> *deleter = NULL;
         if(name == proto_constants::EVENT_SYNC_LOCATION)
         {
             if(m_listener)
             {
                 std::map<id_type,location> locs;
-                json_convertor::to_locations(locs,args);
+                json_convertor::to_locations(locs,args[0U]);
                 sync_event ev = {sync_event_loc_update,&locs};
 //                room* cur_room = m_roommgr.m_room;
                 if( m_roommgr.m_room)
@@ -186,7 +191,7 @@ namespace mmp
         }
         else if(name == proto_constants::EVENT_ROOM_PARTICIPANTS_CHANGE||name  == proto_constants::EVENT_ROOM_CREATE ||name  == proto_constants::EVENT_ROOM_JOIN)
         {
-            room r = json_convertor::to_room(args);
+            room r = json_convertor::to_room(args[0U]);
             m_roommgr.m_room.reset(new room(r));
         }
         else if(name  == proto_constants::EVENT_ROOM_LEAVE)
@@ -195,17 +200,30 @@ namespace mmp
         }
         else if(name == proto_constants::EVENT_USER_TRIAL ||name == proto_constants::EVENT_USER_SIGNIN || name == proto_constants::EVENT_USER_SIGNUP)
         {
-            m_usermgr.m_me.reset(new user(json_convertor::to_user(args)));
+            m_usermgr.m_me.reset(new user(json_convertor::to_user(args[0U])));
+        }
+        else if(name == proto_constants::EVENT_ROOM_FIND_BY_NAME)
+        {
+            room r = json_convertor::to_room(args[0U]);
+            callbackData = new room(r);
+            deleter = new std::function<void (void*)> ([](void* ptr)
+                                                       {
+                                                           delete (room*)ptr;
+                                                       });
         }
 
         auto it = m_callback_mapping.find(name);
         if(it!=m_callback_mapping.end())
         {
-            (it->second)(true, &args);
+            (it->second)(true, callbackData);
             m_callback_mapping.erase(it);
         }
-
         
+        if(callbackData)
+        {
+            (*deleter)(callbackData);
+            delete deleter;
+        }
     }
     
     void sync_engine::on_socketio_error(const std::string& endppoint,const std::string& reason,const std::string& advice)

@@ -52,7 +52,7 @@ namespace mmp
         {
             AddStringMember(json,"name",def.m_name,allocator);
             AddStringMember(json,"psw",def.m_password,allocator);
-            json.AddMember("gen",(unsigned int)def.m_gender,allocator);
+            json.AddMember("gender",(unsigned int)def.m_gender,allocator);
         }
         
         template <typename Allocator>
@@ -70,7 +70,8 @@ namespace mmp
         
         static inline user to_user(Value const&json)
         {
-            user u(json["id"].GetInt(),json["name"].GetString(),(gender)json["gen"].GetInt());
+            gender gen = json.HasMember("gender")? (gender)json["gender"].GetInt() : gender_unknown;
+            user u(json["id"].GetInt(),json["name"].GetString(),gen);
             return u;
         }
         
@@ -87,7 +88,7 @@ namespace mmp
         
         static inline room to_room(Value const&json)
         {
-            room r(json["id"].GetInt(),json["max_count"].GetInt(),json["name"].GetString());
+            room r(json["id"].GetInt(),json["max"].GetInt(),json["name"].GetString());
             const Value *varParts = &(json["parts"]);
             std::vector<user> parts;
             for(Value::ConstValueIterator it = varParts->Begin();it!=varParts->End() ;++it)
