@@ -48,11 +48,11 @@ namespace mmp
 			user_manager(sync_engine* engine);
 			~user_manager();
 		public:
-			void signup(const user_signup_def& signup_def,callback_func& callback);
+			void signup(const user_signup_def& signup_def,callback_func callback);
 
-			void signin(const user_signin_def& signin_def,callback_func& callback);
+			void signin(const user_signin_def& signin_def,callback_func callback);
 
-			void trial(const user_trial_def& trial_def,callback_func& callback);
+			void trial(const user_trial_def& trial_def,callback_func callback);
 
 			const user* me();
 
@@ -71,13 +71,13 @@ namespace mmp
 			~room_manager();
 		public:
 
-			void create_room(const room_def& room_def,callback_func& callback);
+			void create_room(const room_def& room_def,callback_func callback);
 
-            void join(id_type room_id,callback_func& callback);
+            void join(id_type room_id,callback_func callback);
 
-            void leave(id_type room_id,callback_func& callback);
+            void leave(id_type room_id,callback_func callback);
 
-			void find_room_by_name(const std::string& name,callback_func& callback);
+			void find_room_by_name(const std::string& name,callback_func callback);
 
 			const room* current_room();
 			friend class sync_engine;
@@ -117,6 +117,7 @@ namespace mmp
 		class room_manager m_roommgr;
 		class user_manager m_usermgr;
 		time_t m_interval;
+        time_t m_last_publish_time;
 
 
 		void __fire_event(sync_event const& event);

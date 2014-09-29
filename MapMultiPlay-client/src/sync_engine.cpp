@@ -24,7 +24,7 @@ namespace mmp
     {
     }
     
-    void sync_engine::user_manager::signup(const user_signup_def& signup_def,callback_func& callback)
+    void sync_engine::user_manager::signup(const user_signup_def& signup_def,callback_func callback)
     {
         //TODO:call socket.io interfaces.
         using namespace json_convertor;
@@ -37,7 +37,7 @@ namespace mmp
         m_engine->m_client_handler_ptr->emit(proto_constants::EVENT_USER_SIGNUP,doc,proto_constants::ENDPOINT_SERVER);
         m_engine->m_callback_mapping[proto_constants::EVENT_USER_SIGNUP] = callback;
     }
-    void sync_engine::user_manager::signin(const user_signin_def& signin_def,callback_func& callback)
+    void sync_engine::user_manager::signin(const user_signin_def& signin_def,callback_func callback)
     {
         //TODO:call socket.io interfaces.
         Document doc;
@@ -51,7 +51,7 @@ namespace mmp
         m_engine->m_client_handler_ptr->emit(proto_constants::EVENT_USER_SIGNIN,doc,proto_constants::ENDPOINT_SERVER);
         m_engine->m_callback_mapping[proto_constants::EVENT_USER_SIGNIN] = callback;
     }
-    void sync_engine::user_manager::trial(const user_trial_def& trial_def,callback_func& callback)
+    void sync_engine::user_manager::trial(const user_trial_def& trial_def,callback_func callback)
     {
         //TODO:call socket.io interfaces.
         Document doc;
@@ -77,7 +77,7 @@ namespace mmp
     {
     }
     
-    void sync_engine::room_manager::create_room(const room_def& room_def,callback_func& callback)
+    void sync_engine::room_manager::create_room(const room_def& room_def,callback_func callback)
     {
         if(!m_engine->m_usermgr.m_me)
         {
@@ -93,7 +93,7 @@ namespace mmp
         m_engine->m_callback_mapping[proto_constants::EVENT_ROOM_CREATE] = callback;
     }
     
-    void sync_engine::room_manager::join(id_type room_id,callback_func& callback)
+    void sync_engine::room_manager::join(id_type room_id,callback_func callback)
     {
         if(!m_engine->m_usermgr.m_me)
         {
@@ -108,7 +108,7 @@ namespace mmp
         m_engine->m_callback_mapping[proto_constants::EVENT_ROOM_JOIN] = callback;
     }
     
-    void sync_engine::room_manager::leave(id_type room_id,callback_func& callback)
+    void sync_engine::room_manager::leave(id_type room_id,callback_func callback)
     {
         if(!m_engine->m_roommgr.m_room)
         {
@@ -123,7 +123,7 @@ namespace mmp
         m_engine->m_callback_mapping[proto_constants::EVENT_ROOM_LEAVE] = callback;
     }
     
-    void sync_engine::room_manager::find_room_by_name(const std::string& name, callback_func& callback)
+    void sync_engine::room_manager::find_room_by_name(const std::string& name, callback_func callback)
     {
         //TODO:call socket.io interfaces.
         m_engine->m_client_handler_ptr->emit(proto_constants::EVENT_ROOM_FIND_BY_NAME,name,proto_constants::ENDPOINT_SERVER);
@@ -135,7 +135,7 @@ namespace mmp
         return m_room.get();
     }
     
-    sync_engine::sync_engine():m_roommgr(this),m_usermgr(this),m_interval(2),m_listener(NULL),m_client_handler_ptr(new socketio::socketio_client_handler())
+    sync_engine::sync_engine():m_roommgr(this),m_usermgr(this),m_interval(2),m_listener(NULL),m_client_handler_ptr(new socketio::socketio_client_handler()),m_last_publish_time(0)
     {
         m_client_handler_ptr->set_socketio_listener(this);
         m_client_handler_ptr->set_connection_listener(this);
@@ -143,6 +143,8 @@ namespace mmp
     
     sync_engine::~sync_engine(void)
     {
+        m_client_handler_ptr->set_socketio_listener(NULL);
+        m_client_handler_ptr->set_connection_listener(NULL);
     }
     
     void sync_engine::on_fail(connection_hdl con)
@@ -155,6 +157,7 @@ namespace mmp
     
     void sync_engine::on_open(connection_hdl con)
     {
+        m_last_publish_time = 0;
     }
     
     void sync_engine::on_close(connection_hdl con)
@@ -174,7 +177,6 @@ namespace mmp
                 std::map<id_type,location> locs;
                 json_convertor::to_locations(locs,args[0U]);
                 sync_event ev = {sync_event_loc_update,&locs};
-//                room* cur_room = m_roommgr.m_room;
                 if( m_roommgr.m_room)
                 {
                     for(auto it =  m_roommgr.m_room->participants().begin();it!= m_roommgr.m_room->participants().end();++it)
@@ -188,6 +190,7 @@ namespace mmp
                 }
                 m_listener->on_sync_event(ev);
             }
+            return;
         }
         else if(name == proto_constants::EVENT_ROOM_PARTICIPANTS_CHANGE||name  == proto_constants::EVENT_ROOM_CREATE ||name  == proto_constants::EVENT_ROOM_JOIN)
         {
@@ -211,7 +214,18 @@ namespace mmp
                                                            delete (room*)ptr;
                                                        });
         }
-
+        else if(name == proto_constants::EVENT_ERROR)
+        {
+            std::string event = args[0U]["event"].GetString();
+            std::string msg = args[0U]["message"].GetString();
+            auto it = m_callback_mapping.find(event);
+            if (it!=m_callback_mapping.end()) {
+                (it->second)(false,&msg);
+                m_callback_mapping.erase(it);
+            }
+            return;
+        }
+        
         auto it = m_callback_mapping.find(name);
         if(it!=m_callback_mapping.end())
         {
@@ -253,6 +267,11 @@ namespace mmp
     
     void sync_engine::publish_location(const location& loc)
     {
+        time_t t = time(NULL);
+        if(m_last_publish_time + m_interval > t)
+        {
+            return;
+        }
         //TODO:call socket.io interfaces.
         rapidjson::Document doc;
         wrap_json_document(doc, std::function<void (Value& json,Document& doc)>([&](Value& json,Document& d)
@@ -261,6 +280,7 @@ namespace mmp
                                                                                 }));
         
         m_client_handler_ptr->emit(proto_constants::EVENT_PUBLISH_LOCATION,doc,proto_constants::ENDPOINT_SERVER);
+        m_last_publish_time = t;
     }
     
     void sync_engine::set_min_publish_interval(time_t interval)

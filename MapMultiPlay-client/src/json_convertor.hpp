@@ -2,6 +2,10 @@
 #include "geo.hpp"
 #include "room.h"
 
+#define FIX_POINT5(__f__) ((int) (__f__ * 100000.0))
+
+#define FLOAT_POINT5(__d__) ((double) (__d__/100000.0))
+
 namespace mmp
 {
     namespace json_convertor
@@ -18,8 +22,8 @@ namespace mmp
         template <typename Allocator>
         static inline void convert_location(Value &json, const location& loc,Allocator& allocator)
         {
-            json.AddMember("y",loc.latitude,allocator);
-            json.AddMember("x",loc.longitude,allocator);
+            json.AddMember("y",FIX_POINT5(loc.latitude),allocator);
+            json.AddMember("x",FIX_POINT5(loc.longitude),allocator);
             json.AddMember("h",loc.heading,allocator);
             json.AddMember("s",loc.speed,allocator);
         }
@@ -68,10 +72,25 @@ namespace mmp
             AddStringMember(json,"name",def.m_name,allocator);
         }
         
+        static inline location to_location(Value const& json)
+        {
+            location l;
+            l.latitude = FLOAT_POINT5(json["y"].GetInt());
+            l.longitude = FLOAT_POINT5(json["x"].GetInt());
+            l.heading = static_cast<float>(json["h"].GetDouble());
+            l.speed = static_cast<float>(json["s"].GetDouble());
+            return l;
+        }
+        
         static inline user to_user(Value const&json)
         {
             gender gen = json.HasMember("gender")? (gender)json["gender"].GetInt() : gender_unknown;
             user u(json["id"].GetInt(),json["name"].GetString(),gen);
+            if(json.HasMember("loc"))
+            {
+                location loc = to_location(json["loc"]);
+                u.set_location(loc);
+            }
             return u;
         }
         
@@ -99,21 +118,13 @@ namespace mmp
             return r;
         }
         
-        static inline location to_location(Value const& json)
-        {
-            location l;
-            l.latitude = json["y"].GetDouble();
-            l.longitude = json["x"].GetDouble();
-            l.heading = static_cast<float>(json["h"].GetDouble());
-            l.speed = static_cast<float>(json["s"].GetDouble());
-            return l;
-        }
+        
         
         static inline void to_locations(std::map<id_type, location>& locs, Value const& json)
         {
             for(Value::ConstMemberIterator it = json.MemberBegin();it!=json.MemberEnd() ;++it)
             {
-                id_type userid = it->name.GetInt();
+                id_type userid = stoi(it->name.GetString());
                 locs[userid] = to_location(it->value);
             }
         }

@@ -23,4 +23,6 @@ namespace mmp
     const char* const proto_constants::EVENT_ROOM_FIND_BY_NAME = "room_fbn";
     
     const char* const proto_constants::EVENT_ROOM_PARTICIPANTS_CHANGE = "room_parts_change";
+    
+    const char* const proto_constants::EVENT_ERROR = "$error";
 }
