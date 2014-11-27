@@ -24,12 +24,7 @@ namespace mmp
 		const void* payload;
 	};
 
-	class isync_listener
-	{
-	public:
-		virtual void on_sync_event(const sync_event& event) = 0;
-		virtual ~isync_listener(){};
-	};
+	
 
     using namespace socketio;
 	class sync_engine:public socketio_client_handler::connection_listener,public socketio_client_handler::socketio_listener
@@ -38,6 +33,13 @@ namespace mmp
 		typedef std::function<void (bool,result_ptr)> callback_func;
 
 	public:
+        class listener
+        {
+        public:
+            virtual void on_sync_event(const sync_event& event) = 0;
+            virtual ~listener(){};
+        };
+        
 		class user_manager
 		{
 			unique_ptr<user> m_me;
@@ -71,7 +73,7 @@ namespace mmp
 			~room_manager();
 		public:
 
-			void create_room(const room_def& room_def,callback_func callback);
+			void create(const room_def& room_def,callback_func callback);
 
             void join(id_type room_id,callback_func callback);
 
@@ -94,7 +96,7 @@ namespace mmp
 
 		void set_min_publish_interval(time_t interval);
 
-		void set_listener(isync_listener* listener);
+		void set_listener(listener* listener);
 
 		void connect(std::string uri);
 
@@ -113,7 +115,7 @@ namespace mmp
 		void on_socketio_error(const std::string& endppoint,const std::string& reason,const std::string& advice);
 
 	private:
-		isync_listener *m_listener;
+		listener *m_listener;
 		class room_manager m_roommgr;
 		class user_manager m_usermgr;
 		time_t m_interval;

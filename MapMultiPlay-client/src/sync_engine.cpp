@@ -77,7 +77,7 @@ namespace mmp
     {
     }
     
-    void sync_engine::room_manager::create_room(const room_def& room_def,callback_func callback)
+    void sync_engine::room_manager::create(const room_def& room_def,callback_func callback)
     {
         if(!m_engine->m_usermgr.m_me)
         {
@@ -288,7 +288,7 @@ namespace mmp
         m_interval = interval;
     }
     
-    void sync_engine::set_listener(isync_listener* listener)
+    void sync_engine::set_listener(listener* listener)
     {
         m_listener = listener;
     }
