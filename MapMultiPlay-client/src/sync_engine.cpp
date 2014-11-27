@@ -192,7 +192,19 @@ namespace mmp
             }
             return;
         }
-        else if(name == proto_constants::EVENT_ROOM_PARTICIPANTS_CHANGE||name  == proto_constants::EVENT_ROOM_CREATE ||name  == proto_constants::EVENT_ROOM_JOIN)
+        else if(name == proto_constants::EVENT_ROOM_PARTICIPANTS_CHANGE)
+        {
+            room r = json_convertor::to_room(args[0U]);
+            m_roommgr.m_room.reset(new room(r));
+            
+            if(m_listener)
+            {
+                sync_event ev = {sync_event_participants_change,NULL};
+                m_listener->on_sync_event(ev);
+            }
+            
+        }
+        else if(name  == proto_constants::EVENT_ROOM_CREATE ||name  == proto_constants::EVENT_ROOM_JOIN)
         {
             room r = json_convertor::to_room(args[0U]);
             m_roommgr.m_room.reset(new room(r));

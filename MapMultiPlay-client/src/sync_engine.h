@@ -15,7 +15,8 @@ namespace mmp
 {
 	enum sync_event_type
 	{
-		sync_event_loc_update = 1
+		sync_event_loc_update = 1,
+        sync_event_participants_change = 2
 	};
 
 	struct sync_event
