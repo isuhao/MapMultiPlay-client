@@ -19,13 +19,25 @@ namespace mmp
         sync_event_participants_change = 2
 	};
 
+    enum con_event_type
+    {
+        con_event_connected = 1,
+        con_event_handshake_failed = 2,
+        con_event_connect_lost = 3,
+        con_event_disconnected = 4
+    };
+    
 	struct sync_event
 	{
 		sync_event_type type;
 		const void* payload;
 	};
 
-	
+    struct con_event
+    {
+        con_event_type type;
+        const void* payload;
+    };
 
     using namespace socketio;
 	class sync_engine:public socketio_client_handler::connection_listener,public socketio_client_handler::socketio_listener
@@ -38,18 +50,20 @@ namespace mmp
         {
         public:
             virtual void on_sync_event(const sync_event& event) = 0;
+            virtual void on_con_event(const con_event& evnet) = 0;
+            
             virtual ~listener(){};
         };
         
 		class user_manager
 		{
-			unique_ptr<user> m_me;
 			sync_engine* m_engine;
 			user_manager(user_manager const&) {};
 			void operator=(user_manager const&) {};
 		protected:
 			user_manager(sync_engine* engine);
 			~user_manager();
+            unique_ptr<user> m_me;
 		public:
 			void signup(const user_signup_def& signup_def,callback_func callback);
 
@@ -122,7 +136,8 @@ namespace mmp
 		time_t m_interval;
         time_t m_last_publish_time;
 
-
+        bool m_connected;
+        
 		void __fire_event(sync_event const& event);
 	};
 

@@ -135,7 +135,7 @@ namespace mmp
         return m_room.get();
     }
     
-    sync_engine::sync_engine():m_roommgr(this),m_usermgr(this),m_interval(2),m_listener(NULL),m_client_handler_ptr(new socketio::socketio_client_handler()),m_last_publish_time(0)
+    sync_engine::sync_engine():m_roommgr(this),m_usermgr(this),m_interval(2),m_listener(NULL),m_client_handler_ptr(new socketio::socketio_client_handler()),m_last_publish_time(0),m_connected(false)
     {
         m_client_handler_ptr->set_socketio_listener(this);
         m_client_handler_ptr->set_connection_listener(this);
@@ -149,19 +149,32 @@ namespace mmp
     
     void sync_engine::on_fail(connection_hdl con)
     {
+        m_usermgr.m_me.reset();
+        m_roommgr.m_room.reset();
         for(auto it = m_callback_mapping.begin();it!=m_callback_mapping.end();++it)
         {
             (it->second)(false,NULL);
         }
+        m_callback_mapping.clear();
+        con_event_type type = m_connected?con_event_connect_lost:con_event_handshake_failed;
+        con_event event = (con_event){.type = type,.payload = NULL};
+        if(m_listener)m_listener->on_con_event(event);
+        m_connected = false;
     }
     
     void sync_engine::on_open(connection_hdl con)
     {
         m_last_publish_time = 0;
+        m_connected = true;
+        con_event event = (con_event){.type = con_event_connected,.payload = NULL};
+        if(m_listener) m_listener->on_con_event(event);
     }
     
     void sync_engine::on_close(connection_hdl con)
     {
+        m_connected = false;
+        con_event event = (con_event){.type = con_event_disconnected,.payload = NULL};
+        if(m_listener) m_listener->on_con_event(event);
     }
     
     //io listener callbacks
@@ -280,7 +293,7 @@ namespace mmp
     void sync_engine::publish_location(const location& loc)
     {
         time_t t = time(NULL);
-        if(m_last_publish_time + m_interval > t)
+        if(!m_client_handler_ptr->connected() || m_last_publish_time + m_interval > t)
         {
             return;
         }
