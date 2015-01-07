@@ -6,6 +6,7 @@
 #include "geo.hpp"
 #include <vector>
 #include "socket_io_client.h"
+#include "proto_constants.h"
 #include <boost/shared_ptr.hpp>
 #include <functional>
 #include <map>
@@ -25,6 +26,12 @@ namespace mmp
         con_event_handshake_failed = 2,
         con_event_connect_lost = 3,
         con_event_disconnected = 4
+    };
+    
+    struct sync_error
+    {
+        proto_constants::sync_error_type type;
+        std::string description;
     };
     
 	struct sync_event

@@ -2,7 +2,6 @@
 #include <thread>
 #include <chrono>
 #include "json_convertor.hpp"
-#include "proto_constants.h"
 using namespace socketio;
 
 typedef std::chrono::duration<int> seconds_type;
@@ -242,10 +241,12 @@ namespace mmp
         else if(name == proto_constants::EVENT_ERROR)
         {
             std::string event = args[0U]["event"].GetString();
-            std::string msg = args[0U]["message"].GetString();
+            sync_error errorObj;
+            errorObj.description = args[0U]["desc"].GetString();
+            errorObj.type =  (proto_constants::sync_error_type)args[0U]["code"].GetInt();
             auto it = m_callback_mapping.find(event);
             if (it!=m_callback_mapping.end()) {
-                (it->second)(false,&msg);
+                (it->second)(false,&errorObj);
                 m_callback_mapping.erase(it);
             }
             return;
