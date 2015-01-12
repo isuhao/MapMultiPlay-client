@@ -150,9 +150,10 @@ namespace mmp
     {
         m_usermgr.m_me.reset();
         m_roommgr.m_room.reset();
+        sync_error unknown_error = (sync_error){.type = proto_constants::ERROR_UNKNOWN,.description = "Unknown"};
         for(auto it = m_callback_mapping.begin();it!=m_callback_mapping.end();++it)
         {
-            (it->second)(false,NULL);
+            (it->second)(false,&unknown_error);
         }
         m_callback_mapping.clear();
         con_event_type type = m_connected?con_event_connect_lost:con_event_handshake_failed;
@@ -271,9 +272,14 @@ namespace mmp
         
     }
     
-    void sync_engine::connect(std::string uri)
+    void sync_engine::connect(std::string const& uri)
     {
         m_client_handler_ptr->connect(uri);
+    }
+    
+    void sync_engine::reconnect(std::string const& uri)
+    {
+        m_client_handler_ptr->reconnect(uri);
     }
     
     void sync_engine::disconnect()

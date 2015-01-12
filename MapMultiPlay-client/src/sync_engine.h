@@ -120,7 +120,9 @@ namespace mmp
 
 		void set_listener(listener* listener);
 
-		void connect(std::string uri);
+		void connect(std::string const& uri);
+        
+        void reconnect(std::string const& uri);
 
 		void disconnect();
 	protected:
