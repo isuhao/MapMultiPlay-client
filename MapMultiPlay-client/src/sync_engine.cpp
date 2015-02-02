@@ -146,6 +146,16 @@ namespace mmp
         m_client_handler_ptr->set_connection_listener(NULL);
     }
     
+    void sync_engine::recover()
+    {
+        Document doc;
+        wrap_json_document(doc, std::function<void (Value& json,Document& doc)>([&](Value& json,Document& d)
+        {
+            json_convertor::convert_session(json, _session_id,d.GetAllocator());
+        }));
+        this->m_client_handler_ptr->emit(proto_constants::EVENT_RECOVER,doc,proto_constants::ENDPOINT_SERVER);
+    }
+    
     void sync_engine::on_fail(connection_hdl con)
     {
         m_usermgr.m_me.reset();
@@ -166,6 +176,11 @@ namespace mmp
     {
         m_last_publish_time = 0;
         m_connected = true;
+        if(_session_id.length() > 0)
+        {
+            this->recover();
+        }
+        _session_id = m_client_handler_ptr->get_sessionid();
         con_event event = (con_event){.type = con_event_connected,.payload = NULL};
         if(m_listener) m_listener->on_con_event(event);
     }
@@ -176,6 +191,7 @@ namespace mmp
         con_event event = (con_event){.type = con_event_disconnected,.payload = NULL};
         if(m_listener) m_listener->on_con_event(event);
     }
+    
     
     //io listener callbacks
     void sync_engine::on_socketio_event(const std::string& msgEndpoint,const std::string& name, const Value& args,std::string* ackResponse)
@@ -238,6 +254,23 @@ namespace mmp
                                                        {
                                                            delete (room*)ptr;
                                                        });
+        }
+        else if(name  == proto_constants::EVENT_RECOVER)
+        {
+            if(args[0U].HasMember("user"))
+            {
+                m_usermgr.m_me.reset(new user(json_convertor::to_user(args[0U]["user"])));
+                if(args[0U].HasMember("room"))
+                {
+                    m_roommgr.m_room.reset(new room(json_convertor::to_room(args[0U]["room"])));
+
+                }
+            }
+            if(m_listener)
+            {
+                sync_event ev = {sync_event_recovered,NULL};
+                m_listener->on_sync_event(ev);
+            }
         }
         else if(name == proto_constants::EVENT_ERROR)
         {

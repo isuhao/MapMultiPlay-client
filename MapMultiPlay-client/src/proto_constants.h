@@ -15,6 +15,8 @@ namespace mmp
             ERROR_UNKNOWN=255
         };
         
+        static const char* const EVENT_RECOVER;
+        
 		static const char* const EVENT_PUBLISH_LOCATION;
 
 		static const char* const EVENT_SYNC_LOCATION;

@@ -4,6 +4,8 @@ namespace mmp
 {
     const char* const proto_constants::ENDPOINT_SERVER = "";
     
+    const char* const proto_constants::EVENT_RECOVER = "recover";
+    
     const char* const proto_constants::EVENT_PUBLISH_LOCATION = "loc";
     
     const char* const proto_constants::EVENT_SYNC_LOCATION = "sync";

@@ -20,6 +20,12 @@ namespace mmp
         }
         
         template <typename Allocator>
+        static inline void convert_session(Value &json, std::string const& session_id,Allocator& allocator)
+        {
+            AddStringMember(json,"sid",session_id,allocator);
+        }
+        
+        template <typename Allocator>
         static inline void convert_location(Value &json, const location& loc,Allocator& allocator)
         {
             json.AddMember("y",FIX_POINT5(loc.latitude),allocator);

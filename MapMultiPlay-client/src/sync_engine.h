@@ -17,7 +17,8 @@ namespace mmp
 	enum sync_event_type
 	{
 		sync_event_loc_update = 1,
-        sync_event_participants_change = 2
+        sync_event_participants_change = 2,
+        sync_event_recovered = 3
 	};
 
     enum con_event_type
@@ -138,13 +139,14 @@ namespace mmp
 		void on_socketio_event(const std::string& msgEndpoint,const std::string& name, const Value& args,std::string* ackResponse);
 		void on_socketio_error(const std::string& endppoint,const std::string& reason,const std::string& advice);
 
+        void recover();
 	private:
 		listener *m_listener;
 		class room_manager m_roommgr;
 		class user_manager m_usermgr;
 		time_t m_interval;
         time_t m_last_publish_time;
-
+        std::string _session_id;
         bool m_connected;
         
 		void __fire_event(sync_event const& event);
