@@ -1,20 +1,15 @@
 #include "sync_engine.h"
 #include <thread>
 #include <chrono>
-#include "json_convertor.hpp"
+#include "message_convertor.hpp"
 using namespace socketio;
 
 typedef std::chrono::duration<int> seconds_type;
 
 namespace mmp
 {
-    void wrap_json_document(Document& doc,std::function<void (Value& json,Document& doc)> callback)
-    {
-        doc.SetObject();
-        Value json(kObjectType);
-        callback(json,doc);
-        doc.AddMember("args",json,doc.GetAllocator());
-    }
+    
+    using namespace message_convertor;
     
     sync_engine::user_manager::user_manager(sync_engine* engine):m_engine(engine),m_me()
     {
@@ -25,43 +20,31 @@ namespace mmp
     
     void sync_engine::user_manager::signup(const user_signup_def& signup_def,callback_func callback)
     {
-        //TODO:call socket.io interfaces.
-        using namespace json_convertor;
-        Document doc;
-        wrap_json_document(doc, std::function<void (Value& json,Document& doc)>([&](Value& json,Document& d)
-                                                                                {
-                                                                                    json_convertor::convert_user_signup_def(json, signup_def,d.GetAllocator());
-                                                                                }));
+
+
+        message::ptr  msg;
+        convert_user_signup_def(msg,signup_def);
         
-        m_engine->m_client_handler_ptr->emit(proto_constants::EVENT_USER_SIGNUP,doc,proto_constants::ENDPOINT_SERVER);
+        m_engine->m_client_handler_ptr->emit(proto_constants::EVENT_USER_SIGNUP,msg);
         m_engine->m_callback_mapping[proto_constants::EVENT_USER_SIGNUP] = callback;
     }
     void sync_engine::user_manager::signin(const user_signin_def& signin_def,callback_func callback)
     {
         //TODO:call socket.io interfaces.
-        Document doc;
-        wrap_json_document(doc, std::function<void (Value& json,Document& doc)>([&](Value& json,Document& d)
-                                                                                {
-                                                                                    json_convertor::convert_user_signin_def(json, signin_def,d.GetAllocator());
-                                                                                }));
+        message::ptr  msg;
+        convert_user_signin_def(msg, signin_def);
         
+        m_engine->m_client_handler_ptr->emit(proto_constants::EVENT_USER_SIGNIN,msg);
         
-        
-        m_engine->m_client_handler_ptr->emit(proto_constants::EVENT_USER_SIGNIN,doc,proto_constants::ENDPOINT_SERVER);
         m_engine->m_callback_mapping[proto_constants::EVENT_USER_SIGNIN] = callback;
     }
     void sync_engine::user_manager::trial(const user_trial_def& trial_def,callback_func callback)
     {
         //TODO:call socket.io interfaces.
-        Document doc;
+        message::ptr  msg;
+        convert_user_trial_def(msg, trial_def);
         
-        wrap_json_document(doc, std::function<void (Value& json,Document& doc)>([&](Value& json,Document& d)
-                                                                                {
-                                                                                    json_convertor::convert_user_trial_def(json, trial_def,d.GetAllocator());
-                                                                                }));
-        
-        
-        m_engine->m_client_handler_ptr->emit(proto_constants::EVENT_USER_TRIAL,doc,proto_constants::ENDPOINT_SERVER);
+        m_engine->m_client_handler_ptr->emit(proto_constants::EVENT_USER_TRIAL,msg);
         m_engine->m_callback_mapping[proto_constants::EVENT_USER_TRIAL] = callback;
     }
     const user* sync_engine::user_manager::me()
@@ -82,13 +65,9 @@ namespace mmp
         {
             return;
         }
-        Document doc;
-        wrap_json_document(doc, std::function<void (Value& json,Document& doc)>([&](Value& json,Document& d)
-                                                                                {
-                                                                                    json_convertor::convert_room_def(json, room_def,d.GetAllocator());
-                                                                                }));
-        
-        m_engine->m_client_handler_ptr->emit(proto_constants::EVENT_ROOM_CREATE,doc,proto_constants::ENDPOINT_SERVER);
+        message::ptr  msg;
+        convert_room_def(msg, room_def);
+        m_engine->m_client_handler_ptr->emit(proto_constants::EVENT_ROOM_CREATE,msg);
         m_engine->m_callback_mapping[proto_constants::EVENT_ROOM_CREATE] = callback;
     }
     
@@ -98,12 +77,10 @@ namespace mmp
         {
             return;
         }
-        Document doc;
-        wrap_json_document(doc, std::function<void (Value& json,Document& doc)>([&](Value& json,Document& d)
-                                                                                {
-                                                                                    json_convertor::convert_id(json, room_id,d.GetAllocator());
-                                                                                }));
-        m_engine->m_client_handler_ptr->emit(proto_constants::EVENT_ROOM_JOIN,doc,proto_constants::ENDPOINT_SERVER);
+        message::ptr msg;
+        convert_id(msg, room_id);
+       
+        m_engine->m_client_handler_ptr->emit(proto_constants::EVENT_ROOM_JOIN,msg);
         m_engine->m_callback_mapping[proto_constants::EVENT_ROOM_JOIN] = callback;
     }
     
@@ -113,19 +90,17 @@ namespace mmp
         {
             return;
         }
-        Document doc;
-        wrap_json_document(doc, std::function<void (Value& json,Document& doc)>([&](Value& json,Document& d)
-                                                                                {
-                                                                                    json_convertor::convert_id(json, room_id,d.GetAllocator());
-                                                                                }));
-        m_engine->m_client_handler_ptr->emit(proto_constants::EVENT_ROOM_LEAVE,doc,proto_constants::ENDPOINT_SERVER);
+        message::ptr msg;
+        convert_id(msg, room_id);
+        
+        m_engine->m_client_handler_ptr->emit(proto_constants::EVENT_ROOM_LEAVE,msg);
         m_engine->m_callback_mapping[proto_constants::EVENT_ROOM_LEAVE] = callback;
     }
     
     void sync_engine::room_manager::find_room_by_name(const std::string& name, callback_func callback)
     {
-        //TODO:call socket.io interfaces.
-        m_engine->m_client_handler_ptr->emit(proto_constants::EVENT_ROOM_FIND_BY_NAME,name,proto_constants::ENDPOINT_SERVER);
+        
+        m_engine->m_client_handler_ptr->emit(proto_constants::EVENT_ROOM_FIND_BY_NAME,name);
         m_engine->m_callback_mapping[proto_constants::EVENT_ROOM_FIND_BY_NAME] = callback;
     }
     
@@ -134,7 +109,7 @@ namespace mmp
         return m_room.get();
     }
     
-    sync_engine::sync_engine():m_roommgr(this),m_usermgr(this),m_interval(2),m_listener(NULL),m_client_handler_ptr(new socketio::socketio_client_handler()),m_last_publish_time(0),m_connected(false)
+    sync_engine::sync_engine():m_roommgr(this),m_usermgr(this),m_interval(2),m_listener(NULL),m_client_handler_ptr(new socketio::handler()),m_last_publish_time(0),m_connected(false)
     {
         m_client_handler_ptr->set_socketio_listener(this);
         m_client_handler_ptr->set_connection_listener(this);
@@ -146,17 +121,7 @@ namespace mmp
         m_client_handler_ptr->set_connection_listener(NULL);
     }
     
-    void sync_engine::recover()
-    {
-        Document doc;
-        wrap_json_document(doc, std::function<void (Value& json,Document& doc)>([&](Value& json,Document& d)
-        {
-            json_convertor::convert_session(json, _session_id,d.GetAllocator());
-        }));
-        this->m_client_handler_ptr->emit(proto_constants::EVENT_RECOVER,doc,proto_constants::ENDPOINT_SERVER);
-    }
-    
-    void sync_engine::on_fail(connection_hdl con)
+    void sync_engine::on_fail()
     {
         m_usermgr.m_me.reset();
         m_roommgr.m_room.reset();
@@ -172,29 +137,35 @@ namespace mmp
         m_connected = false;
     }
     
-    void sync_engine::on_open(connection_hdl con)
+    void sync_engine::on_open()
+    {
+        con_event event = (con_event){.type = con_event_connected,.payload = NULL};
+        if(m_listener) m_listener->on_con_event(event);
+    }
+    
+    void sync_engine::on_connected()
     {
         m_last_publish_time = 0;
         m_connected = true;
-        if(_session_id.length() > 0)
-        {
-            this->recover();
-        }
+        
         _session_id = m_client_handler_ptr->get_sessionid();
         con_event event = (con_event){.type = con_event_connected,.payload = NULL};
         if(m_listener) m_listener->on_con_event(event);
     }
     
-    void sync_engine::on_close(connection_hdl con)
+    void sync_engine::on_close()
     {
         m_connected = false;
         con_event event = (con_event){.type = con_event_disconnected,.payload = NULL};
         if(m_listener) m_listener->on_con_event(event);
     }
     
-    
+    void sync_engine::on_socketio_ack_event(const std::string& name,message::ptr const& message, message::ptr& ack_message)
+    {
+        
+    }
     //io listener callbacks
-    void sync_engine::on_socketio_event(const std::string& msgEndpoint,const std::string& name, const Value& args,std::string* ackResponse)
+    void sync_engine::on_socketio_event(const std::string& name,message::ptr const& message)
     {
         
         void* callbackData = NULL;
@@ -204,7 +175,7 @@ namespace mmp
             if(m_listener)
             {
                 std::map<id_type,location> locs;
-                json_convertor::to_locations(locs,args[0U]);
+                to_locations(locs,message);
                 sync_event ev = {sync_event_loc_update,&locs};
                 if( m_roommgr.m_room)
                 {
@@ -223,7 +194,7 @@ namespace mmp
         }
         else if(name == proto_constants::EVENT_ROOM_PARTICIPANTS_CHANGE)
         {
-            room r = json_convertor::to_room(args[0U]);
+            room r = to_room(message);
             m_roommgr.m_room.reset(new room(r));
             
             if(m_listener)
@@ -235,7 +206,7 @@ namespace mmp
         }
         else if(name  == proto_constants::EVENT_ROOM_CREATE ||name  == proto_constants::EVENT_ROOM_JOIN)
         {
-            room r = json_convertor::to_room(args[0U]);
+            room r = to_room(message);
             m_roommgr.m_room.reset(new room(r));
         }
         else if(name  == proto_constants::EVENT_ROOM_LEAVE)
@@ -244,11 +215,11 @@ namespace mmp
         }
         else if(name == proto_constants::EVENT_USER_TRIAL ||name == proto_constants::EVENT_USER_SIGNIN || name == proto_constants::EVENT_USER_SIGNUP)
         {
-            m_usermgr.m_me.reset(new user(json_convertor::to_user(args[0U])));
+            m_usermgr.m_me.reset(new user(to_user(message)));
         }
         else if(name == proto_constants::EVENT_ROOM_FIND_BY_NAME)
         {
-            room r = json_convertor::to_room(args[0U]);
+            room r = to_room(message);
             callbackData = new room(r);
             deleter = new std::function<void (void*)> ([](void* ptr)
                                                        {
@@ -257,12 +228,15 @@ namespace mmp
         }
         else if(name  == proto_constants::EVENT_RECOVER)
         {
-            if(args[0U].HasMember("user"))
+            auto it = message->get_map().find("user");
+            auto npos = message->get_map().end();
+            if(it!=npos)
             {
-                m_usermgr.m_me.reset(new user(json_convertor::to_user(args[0U]["user"])));
-                if(args[0U].HasMember("room"))
+                m_usermgr.m_me.reset(new user(to_user(it->second)));
+                it = message->get_map().find("room");
+                if(it!=npos)
                 {
-                    m_roommgr.m_room.reset(new room(json_convertor::to_room(args[0U]["room"])));
+                    m_roommgr.m_room.reset(new room(to_room(it->second)));
 
                 }
             }
@@ -274,10 +248,10 @@ namespace mmp
         }
         else if(name == proto_constants::EVENT_ERROR)
         {
-            std::string event = args[0U]["event"].GetString();
+            std::string event = message->get_map()["event"]->get_string();
             sync_error errorObj;
-            errorObj.description = args[0U]["desc"].GetString();
-            errorObj.type =  (proto_constants::sync_error_type)args[0U]["code"].GetInt();
+            errorObj.description = message->get_map()["desc"]->get_string();
+            errorObj.type =  (proto_constants::sync_error_type)message->get_map()["code"]->get_int();
             auto it = m_callback_mapping.find(event);
             if (it!=m_callback_mapping.end()) {
                 (it->second)(false,&errorObj);
@@ -298,11 +272,6 @@ namespace mmp
             (*deleter)(callbackData);
             delete deleter;
         }
-    }
-    
-    void sync_engine::on_socketio_error(const std::string& endppoint,const std::string& reason,const std::string& advice)
-    {
-        
     }
     
     void sync_engine::connect(std::string const& uri)
@@ -338,13 +307,9 @@ namespace mmp
             return;
         }
         //TODO:call socket.io interfaces.
-        rapidjson::Document doc;
-        wrap_json_document(doc, std::function<void (Value& json,Document& doc)>([&](Value& json,Document& d)
-                                                                                {
-                                                                                    json_convertor::convert_location(json, loc,d.GetAllocator());
-                                                                                }));
-        
-        m_client_handler_ptr->emit(proto_constants::EVENT_PUBLISH_LOCATION,doc,proto_constants::ENDPOINT_SERVER);
+        message::ptr msg;
+        convert_location(msg, loc);
+        m_client_handler_ptr->emit(proto_constants::EVENT_PUBLISH_LOCATION,msg);
         m_last_publish_time = t;
     }
     

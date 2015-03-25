@@ -7,9 +7,9 @@
 #include <vector>
 #include "socket_io_client.h"
 #include "proto_constants.h"
-#include <boost/shared_ptr.hpp>
 #include <functional>
 #include <map>
+#include <memory>
 
 
 namespace mmp
@@ -23,10 +23,11 @@ namespace mmp
 
     enum con_event_type
     {
-        con_event_connected = 1,
-        con_event_handshake_failed = 2,
-        con_event_connect_lost = 3,
-        con_event_disconnected = 4
+        con_event_open = 1,
+        con_event_connected = 2,
+        con_event_handshake_failed = 3,
+        con_event_connect_lost = 4,
+        con_event_disconnected = 5
     };
     
     struct sync_error
@@ -48,7 +49,7 @@ namespace mmp
     };
 
     using namespace socketio;
-	class sync_engine:public socketio_client_handler::connection_listener,public socketio_client_handler::socketio_listener
+	class sync_engine:public handler::connection_listener,public handler::socketio_listener
 	{
 		typedef const void* result_ptr;
 		typedef std::function<void (bool,result_ptr)> callback_func;
@@ -127,19 +128,19 @@ namespace mmp
 
 		void disconnect();
 	protected:
-		socketio::socketio_client_handler_ptr m_client_handler_ptr;
+        std::unique_ptr<socketio::handler> m_client_handler_ptr;
 		std::map<std::string, callback_func> m_callback_mapping; 
 
 		//con event callbacks
-		void on_fail(connection_hdl con);
-		void on_open(connection_hdl con) ;
-		void on_close(connection_hdl con);
-
+		void on_fail();
+		void on_open() ;
+		void on_close();
+        void on_connected();
+        
 		//io listener callbacks
-		void on_socketio_event(const std::string& msgEndpoint,const std::string& name, const Value& args,std::string* ackResponse);
-		void on_socketio_error(const std::string& endppoint,const std::string& reason,const std::string& advice);
+        void on_socketio_event(const std::string& name,message::ptr const& message);
+        void on_socketio_ack_event(const std::string& name,message::ptr const& message, message::ptr& ack_message);
 
-        void recover();
 	private:
 		listener *m_listener;
 		class room_manager m_roommgr;
