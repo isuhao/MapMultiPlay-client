@@ -49,7 +49,7 @@ namespace mmp
     };
 
     using namespace socketio;
-	class sync_engine:public handler::connection_listener,public handler::socketio_listener
+	class sync_engine
 	{
 		typedef const void* result_ptr;
 		typedef std::function<void (bool,result_ptr)> callback_func;
@@ -134,7 +134,7 @@ namespace mmp
 		//con event callbacks
 		void on_fail();
 		void on_open() ;
-		void on_close();
+        void on_close(handler::close_reason const& reason);
         void on_connected();
         
 		//io listener callbacks

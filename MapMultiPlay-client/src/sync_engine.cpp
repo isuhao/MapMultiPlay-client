@@ -111,14 +111,20 @@ namespace mmp
     
     sync_engine::sync_engine():m_roommgr(this),m_usermgr(this),m_interval(2),m_listener(NULL),m_client_handler_ptr(new socketio::handler()),m_last_publish_time(0),m_connected(false)
     {
-        m_client_handler_ptr->set_socketio_listener(this);
-        m_client_handler_ptr->set_connection_listener(this);
+        m_client_handler_ptr->set_connect_listener(std::bind(&sync_engine::on_connected,this));
+        m_client_handler_ptr->set_open_listener(std::bind(&sync_engine::on_open,this));
+        m_client_handler_ptr->set_fail_listener(std::bind(&sync_engine::on_fail,this));
+        m_client_handler_ptr->set_close_listener(std::bind(&sync_engine::on_close,this,std::placeholders::_1));
+        
+        m_client_handler_ptr->set_event_listener(std::bind(&sync_engine::on_socketio_event,this,std::placeholders::_1,std::placeholders::_2));
+        m_client_handler_ptr->set_ack_event_listener(std::bind(&sync_engine::on_socketio_ack_event,this,std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+
     }
     
     sync_engine::~sync_engine(void)
     {
-        m_client_handler_ptr->set_socketio_listener(NULL);
-        m_client_handler_ptr->set_connection_listener(NULL);
+        m_client_handler_ptr->clear_con_listeners();
+        m_client_handler_ptr->clear_socketio_listeners();
     }
     
     void sync_engine::on_fail()
@@ -153,7 +159,7 @@ namespace mmp
         if(m_listener) m_listener->on_con_event(event);
     }
     
-    void sync_engine::on_close()
+    void sync_engine::on_close(handler::close_reason const& reason)
     {
         m_connected = false;
         con_event event = (con_event){.type = con_event_disconnected,.payload = NULL};
