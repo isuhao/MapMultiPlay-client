@@ -19,7 +19,7 @@ namespace mmp
 {
     namespace message_convertor
     {
-        using namespace socketio;
+        using namespace sioclient;
         
         static inline void convert_session(message::ptr &msg, std::string const& session_id)
         {

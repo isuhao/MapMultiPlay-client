@@ -2,7 +2,7 @@
 #include <thread>
 #include <chrono>
 #include "message_convertor.hpp"
-using namespace socketio;
+using namespace sioclient;
 
 typedef std::chrono::duration<int> seconds_type;
 
@@ -109,16 +109,14 @@ namespace mmp
         return m_room.get();
     }
     
-    sync_engine::sync_engine():m_roommgr(this),m_usermgr(this),m_interval(2),m_listener(NULL),m_client_handler_ptr(new socketio::handler()),m_last_publish_time(0),m_connected(false)
+    sync_engine::sync_engine():m_roommgr(this),m_usermgr(this),m_interval(2),m_listener(NULL),m_client_handler_ptr(new sioclient::handler()),m_last_publish_time(0),m_connected(false)
     {
         m_client_handler_ptr->set_connect_listener(std::bind(&sync_engine::on_connected,this));
         m_client_handler_ptr->set_open_listener(std::bind(&sync_engine::on_open,this));
         m_client_handler_ptr->set_fail_listener(std::bind(&sync_engine::on_fail,this));
         m_client_handler_ptr->set_close_listener(std::bind(&sync_engine::on_close,this,std::placeholders::_1));
         
-        m_client_handler_ptr->set_event_listener(std::bind(&sync_engine::on_socketio_event,this,std::placeholders::_1,std::placeholders::_2));
-        m_client_handler_ptr->set_ack_event_listener(std::bind(&sync_engine::on_socketio_ack_event,this,std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
-
+        m_client_handler_ptr->set_default_event_listener(std::bind(&sync_engine::on_socketio_event,this,std::placeholders::_1,std::placeholders::_2,std::placeholders::_3,std::placeholders::_4));
     }
     
     sync_engine::~sync_engine(void)
@@ -165,13 +163,9 @@ namespace mmp
         con_event event = (con_event){.type = con_event_disconnected,.payload = NULL};
         if(m_listener) m_listener->on_con_event(event);
     }
-    
-    void sync_engine::on_socketio_ack_event(const std::string& name,message::ptr const& message, message::ptr& ack_message)
-    {
-        
-    }
+
     //io listener callbacks
-    void sync_engine::on_socketio_event(const std::string& name,message::ptr const& message)
+    void sync_engine::on_socketio_event(const std::string& name,message::ptr const& message,bool needAck, message::ptr& ack_response)
     {
         
         void* callbackData = NULL;

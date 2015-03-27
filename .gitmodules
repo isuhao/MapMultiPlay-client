@@ -1,6 +1,3 @@
 [submodule ".\\MapMultiPlay-client\\socketio"]
 	path = .\\MapMultiPlay-client\\socketio
 	url = https://github.com/melode11/socket.io-clientpp.git
-[submodule "MapMultiPlay-client/socketio"]
-	path = MapMultiPlay-client/socketio
-	url = https://github.com/melode11/socket.io-clientpp

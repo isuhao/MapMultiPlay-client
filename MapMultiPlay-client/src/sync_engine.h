@@ -48,7 +48,7 @@ namespace mmp
         const void* payload;
     };
 
-    using namespace socketio;
+    using namespace sioclient;
 	class sync_engine
 	{
 		typedef const void* result_ptr;
@@ -128,7 +128,7 @@ namespace mmp
 
 		void disconnect();
 	protected:
-        std::unique_ptr<socketio::handler> m_client_handler_ptr;
+        std::unique_ptr<sioclient::handler> m_client_handler_ptr;
 		std::map<std::string, callback_func> m_callback_mapping; 
 
 		//con event callbacks
@@ -138,8 +138,7 @@ namespace mmp
         void on_connected();
         
 		//io listener callbacks
-        void on_socketio_event(const std::string& name,message::ptr const& message);
-        void on_socketio_ack_event(const std::string& name,message::ptr const& message, message::ptr& ack_message);
+        void on_socketio_event(const std::string& name,message::ptr const& message,bool needAck, message::ptr& ack_response);
 
 	private:
 		listener *m_listener;
