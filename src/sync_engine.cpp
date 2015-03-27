@@ -2,7 +2,7 @@
 #include <thread>
 #include <chrono>
 #include "message_convertor.hpp"
-using namespace sioclient;
+using namespace sio;
 
 typedef std::chrono::duration<int> seconds_type;
 
@@ -109,7 +109,7 @@ namespace mmp
         return m_room.get();
     }
     
-    sync_engine::sync_engine():m_roommgr(this),m_usermgr(this),m_interval(2),m_listener(NULL),m_client_handler_ptr(new sioclient::handler()),m_last_publish_time(0),m_connected(false)
+    sync_engine::sync_engine():m_roommgr(this),m_usermgr(this),m_interval(2),m_listener(NULL),m_client_handler_ptr(new sio::client()),m_last_publish_time(0),m_connected(false)
     {
         m_client_handler_ptr->set_connect_listener(std::bind(&sync_engine::on_connected,this));
         m_client_handler_ptr->set_open_listener(std::bind(&sync_engine::on_open,this));
@@ -157,7 +157,7 @@ namespace mmp
         if(m_listener) m_listener->on_con_event(event);
     }
     
-    void sync_engine::on_close(handler::close_reason const& reason)
+    void sync_engine::on_close(client::close_reason const& reason)
     {
         m_connected = false;
         con_event event = (con_event){.type = con_event_disconnected,.payload = NULL};

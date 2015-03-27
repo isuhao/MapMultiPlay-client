@@ -13,13 +13,13 @@
 
 #define FLOAT_POINT5(__d__) ((double) (__d__/100000.0))
 
-#include "socket_io_message.h"
+#include "sio_message.h"
 
 namespace mmp
 {
     namespace message_convertor
     {
-        using namespace sioclient;
+        using namespace sio;
         
         static inline void convert_session(message::ptr &msg, std::string const& session_id)
         {

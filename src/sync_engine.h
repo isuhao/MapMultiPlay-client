@@ -5,7 +5,7 @@
 #include "user.h"
 #include "geo.hpp"
 #include <vector>
-#include "socket_io_client.h"
+#include "sio_client.h"
 #include "proto_constants.h"
 #include <functional>
 #include <map>
@@ -48,7 +48,7 @@ namespace mmp
         const void* payload;
     };
 
-    using namespace sioclient;
+    using namespace sio;
 	class sync_engine
 	{
 		typedef const void* result_ptr;
@@ -128,13 +128,13 @@ namespace mmp
 
 		void disconnect();
 	protected:
-        std::unique_ptr<sioclient::handler> m_client_handler_ptr;
+        std::unique_ptr<sio::client> m_client_handler_ptr;
 		std::map<std::string, callback_func> m_callback_mapping; 
 
 		//con event callbacks
 		void on_fail();
 		void on_open() ;
-        void on_close(handler::close_reason const& reason);
+        void on_close(client::close_reason const& reason);
         void on_connected();
         
 		//io listener callbacks
